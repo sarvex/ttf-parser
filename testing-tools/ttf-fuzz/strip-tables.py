@@ -29,24 +29,25 @@ if args.out_dir.exists():
 os.mkdir(args.out_dir)
 
 required_tables = ['head', 'hhea', 'maxp']
-if args.target == 'glyf-outline':
-    required_tables.extend(['loca', 'glyf'])
-elif args.target == 'gvar-outline':
-    required_tables.extend(['loca', 'glyf', 'gvar', 'fvar'])
-elif args.target == 'cff-outline':
+if args.target == 'cff-outline':
     required_tables.append('CFF ')
 elif args.target == 'cff2-outline':
     required_tables.extend(['CFF2', 'fvar'])
+elif args.target == 'glyf-outline':
+    required_tables.extend(['loca', 'glyf'])
 elif args.target == 'glyph-index':
     required_tables.append('cmap')
 
+elif args.target == 'gvar-outline':
+    required_tables.extend(['loca', 'glyf', 'gvar', 'fvar'])
 fonts = []
 for dir in args.in_dirs:
     for root, _, files in os.walk(dir):
-        for file in files:
-            if file.endswith('ttf') or file.endswith('otf'):
-                fonts.append(Path(root).joinpath(file))
-
+        fonts.extend(
+            Path(root).joinpath(file)
+            for file in files
+            if file.endswith('ttf') or file.endswith('otf')
+        )
 for orig_font_path in fonts:
     with open(orig_font_path, 'rb') as in_file:
         font_data = in_file.read()
@@ -87,5 +88,5 @@ for orig_font_path in fonts:
         for (_, table_data) in tables:
             new_data.write(table_data)
 
-        with open(args.out_dir.joinpath(str(uuid4()) + '.ttf'), 'wb') as out_file:
+        with open(args.out_dir.joinpath(f'{str(uuid4())}.ttf'), 'wb') as out_file:
             out_file.write(new_data.getbuffer())
